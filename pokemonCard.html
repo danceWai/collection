@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>포켓몬 카드</title>
+        <style>
+            body {
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #f4f4f4;
+                margin: 0;
+            }
+            .card-container {
+                perspective: 1000px;
+            }
+            .card {
+                width: 250px;
+                height: 350px;
+                background: url("https://assets.pokemon.com/static-assets/content-assets/cms2/img/cards/web/SMP/SMP_EN_SM113.png")
+                    no-repeat center/cover;
+                border-radius: 15px;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+                transform-style: preserve-3d;
+                transition: transform 0.3s ease-out;
+                position: relative;
+                overflow: hidden;
+                transform: rotateY(0deg);
+            }
+            .holo-overlay {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background: repeating-linear-gradient(
+                    45deg,
+                    rgba(255, 255, 255, 0.2),
+                    rgba(255, 255, 255, 0) 10px
+                );
+                mix-blend-mode: overlay;
+                pointer-events: none;
+            }
+            .holo-effect {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(
+                    circle at 50% 50%,
+                    rgba(255, 255, 255, 10),
+                    transparent 60%
+                );
+                mix-blend-mode: overlay;
+                transition: background-position 0.1s ease-out;
+                pointer-events: none;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Header -->
+        <header
+            class="bg-white shadow-md py-4 fixed top-0 left-0 w-full text-center"
+        >
+            <a
+                href="index.html"
+                class="text-2xl font-bold text-gray-900 hover:text-blue-600 transition"
+                >Dance W.AI</a
+            >
+        </header>
+        <div class="card-container">
+            <div class="card" id="pokemonCard">
+                <div class="holo-overlay"></div>
+                <div class="holo-effect"></div>
+            </div>
+        </div>
+        <script>
+            const card = document.querySelector(".card")
+            const holoEffect = document.querySelector(".holo-effect")
+            let isDragging = false
+            let startX, startY
+            let rotateX = 0,
+                rotateY = 0
+            let flipped = false
+            let touchStartTime = 0
+
+            function startDrag(e) {
+                if (flipped) return
+                isDragging = true
+                startX = e.touches ? e.touches[0].clientX : e.clientX
+                startY = e.touches ? e.touches[0].clientY : e.clientY
+                e.preventDefault()
+                touchStartTime = Date.now()
+            }
+
+            function onDrag(e) {
+                if (!isDragging || flipped) return
+                let clientX = e.touches ? e.touches[0].clientX : e.clientX
+                let clientY = e.touches ? e.touches[0].clientY : e.clientY
+                let dx = clientX - startX
+                let dy = clientY - startY
+                rotateY = dx / 5
+                rotateX = -dy / 5
+                requestAnimationFrame(updateCard)
+            }
+
+            function stopDrag(e) {
+                if (!flipped) {
+                    isDragging = false
+                    rotateX = 0
+                    rotateY = 0
+                    requestAnimationFrame(updateCard)
+                }
+
+                if (!flipped && Date.now() - touchStartTime < 100) {
+                    flipCard()
+                }
+            }
+
+            function updateCard() {
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) ${
+                    flipped ? "rotateY(180deg)" : ""
+                }`
+                holoEffect.style.background = `radial-gradient(circle at ${
+                    50 + rotateY
+                }% ${
+                    50 + rotateX
+                }%, rgba(255, 255, 255, 10.0), transparent 60%)`
+            }
+
+            function flipCard() {
+                flipped = !flipped
+                card.style.transform = flipped
+                    ? "rotateY(180deg)"
+                    : "rotateY(0deg)"
+            }
+
+            card.addEventListener("click", flipCard)
+            document.addEventListener("mousedown", startDrag)
+            document.addEventListener("mousemove", onDrag)
+            document.addEventListener("mouseup", stopDrag)
+
+            card.addEventListener("touchstart", startDrag, { passive: false })
+            document.addEventListener("touchmove", onDrag, { passive: false })
+            document.addEventListener("touchend", stopDrag)
+        </script>
+    </body>
+</html>
